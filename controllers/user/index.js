@@ -10,7 +10,7 @@ module.exports = {
         let { id } = req.params
         if(id == "" || !id){
             let returnedResponse = new Response(false, "User ID is required", "99", {})
-            logger.error(returnedResponse.toString())
+            logger.error(returnedResponse.description)
             return res.status(400).json(returnedResponse)
         }else {
             let callResponse = await CallService.makeCall("GET",`${process.env.ALEPO_GET_USER}/${id}` )
@@ -20,7 +20,7 @@ module.exports = {
                 email: response.email,
                 phoneHome: response.phoneHome
              }: response)
-             !status? logger.error(returnedResponse.toString()) : null
+             !status? logger.error(returnedResponse.description) : null
             return res.status(status? 200 : 400).send(returnedResponse)
         }
     })
