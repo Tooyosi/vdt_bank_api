@@ -10,10 +10,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}))
 
 const userRoutes = require('./routes/user/index')
-const paymentRoutes = require('./routes/payments/index')
 
 app.use('/user', userRoutes)
-app.use('/payment', paymentRoutes)
 
 let options = {
     swaggerDefinition: {
