@@ -49,7 +49,7 @@ module.exports = {
                     })
                     let callResponse = await CallService.makeCall("GET", `${process.env.ALEPO_POST_USER}/${id}/postamount?amount=${amount}&paymentMethod=8&transactionType=Credit&cardId=xc03&paymentReceiver=chijioke`)
                     let { status, response } = callResponse
-                    let returnedResponse = new Response(status, status ? "Success" : response.toString(), status ? "00" : "99", response)
+                    let returnedResponse = new Response(status, status ? "Success" : response.toString(), status ? "00" : "99", response.paymentNumber? {} : response)
                     if (status) {
                         newTransaction.update({
                             post_amount_status: 'success',
