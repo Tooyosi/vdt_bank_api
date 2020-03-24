@@ -9,7 +9,7 @@ class SendMail {
         }
     }
 
-    async dispatch(to, from, subject, text) {
+    async dispatch(to, from, subject, text, myCallBack) {
         var smtpTransport = nodemailer.createTransport({
             service: this.service,
             auth: this.auth
@@ -21,12 +21,8 @@ class SendMail {
             subject: subject,
             text: text
         };
-        await smtpTransport.sendMail(mailOptions, (err) => {
-            if (err) {
-                logger.error(err.toString())
-            } else {
-                logger.info(`Mail sent to ${mailOptions.to}`)
-            }
+        return await smtpTransport.sendMail(mailOptions, (err) => {
+            return myCallBack(err)
         });
     }
 }

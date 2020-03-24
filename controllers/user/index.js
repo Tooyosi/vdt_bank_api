@@ -55,7 +55,9 @@ module.exports = {
                             post_amount_status: 'success',
                             payment_number_alepo: response.paymentNumber
                         })
-                        await mailService.dispatch(email, process.env.EMAIL, "VDT Payment Complete", `Your payment of ${amount} has been successful`)
+                        await mailService.dispatch(email, process.env.EMAIL, "VDT Payment Complete", `Your payment of ${amount} has been successful`, (err)=>{
+                            return res.status(status ? 200 : 400).send(returnedResponse)
+                        })
                     } else {
                         newTransaction.update({
                             post_amount_status: 'failed',

@@ -38,6 +38,12 @@ module.exports = function(sequelize, DataTypes) {
     'transaction_ref': {
       type: DataTypes.STRING(255),
       allowNull: false,
+      comment: "null",
+      unique: true
+    },
+    'payment_ref': {
+      type: DataTypes.STRING(255),
+      allowNull: false,
       comment: "null"
     },
     'amount': {
@@ -78,6 +84,16 @@ module.exports = function(sequelize, DataTypes) {
     'failure_reason_alepo': {
       type: DataTypes.STRING(255),
       allowNull: true,
+      comment: "null"
+    },
+    'total_amount': {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
+      comment: "null"
+    },
+    'charge': {
+      type: DataTypes.INTEGER(11),
+      allowNull: false,
       comment: "null"
     }
   }, {

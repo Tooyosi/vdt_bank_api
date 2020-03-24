@@ -1,5 +1,5 @@
 const axios = require("axios")
-
+const {logger} = require('../loggers/logger')
 
 class AlepoCallService {
     constructor() {
@@ -10,7 +10,7 @@ class AlepoCallService {
     }
 
     async makeCall(method, url) {
-        let response, status;
+        let response, status = false;
         try {
             response = await axios({
                 method: method,
@@ -20,10 +20,12 @@ class AlepoCallService {
                 status = true
                 return res.data
             }).catch((err)=>{
+                logger.error(err.toString())
                 return err.toString()
             })
 
         } catch (error) {
+            logger.error(error.toString())
             status = false
             response = error.toString()
         }

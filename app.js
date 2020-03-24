@@ -23,7 +23,6 @@ app.use(require("express-session")({
     resave: false,
     saveUninitialized: false
 }))
-
 app.use(function (req, res, next) {
     res.locals.error = req.flash("error");
     res.locals.success = req.flash("success");
@@ -31,9 +30,11 @@ app.use(function (req, res, next) {
 })
 
 const userRoutes = require('./routes/user/index')
+const paymentRoutes = require('./routes/payments/index')
 const adminRoute = require('./routes/admin/index')
 
 app.use('/user', userRoutes)
+app.use('/pay', paymentRoutes)
 app.use('/admin', adminRoute)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
