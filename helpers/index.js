@@ -3,8 +3,16 @@ const moment = require('moment-timezone')
 
 module.exports = {
     bin2hashData:  (data, key)=> {
-        let genHash = crypto.createHmac('sha512', key).update(data, "ascii").digest('hex')
-        return genHash
+        // let genHash = crypto.createHmac('sha512', key).update(data, "ascii").digest('hex')
+        // return genHash
+        var crypto = require('crypto');
+        //creating hash object 
+        var hash = crypto.createHash('sha512');
+        //passing the data to be hashed
+        var data = hash.update(data, 'utf-8');
+        //Creating the hash in the required format
+        var gen_hash = data.digest('hex');
+        return gen_hash
     },
     successCode: "00",
     failureCode: "01",
@@ -20,7 +28,10 @@ module.exports = {
         return moment(day).format('YYYY-MM-DD')
     },
     getTime: (date)=>{
-        return moment(date).format('HH.mm.ss')
+        return moment(date).format('HH:mm:ss')
+    },
+    addMinutes: (date, minutes) => {
+        return moment.tz(new Date(date.getTime() + minutes * 60000), "Africa/Lagos").format().slice(0, 19).replace('T', ' ')
     },
     getTransMessage:(status)=>{
         let response

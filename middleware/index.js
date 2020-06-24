@@ -1,13 +1,20 @@
+const auth = require('basic-auth')
+
 module.exports = {
     auth: (req, res, next)=>{
-        if(req.headers.auth == null || req.headers.auth == undefined){
-            return res.status(401).send("Unauthorized")
-        }
-        let {username, password} =JSON.parse(req.headers.auth)
-        if(username !== process.env.SECRET_USERNAME || password !== process.env.SECRET_PASSWORD){
-            return res.status(401).send("Unauthorized")
+        var user = auth(req)
+        if (!user || user.name !==process.env.SECRET_USERNAME || user.pass !== process.env.SECRET_PASSWORD) {
+            res.set('WWW-Authenticate', 'Basic realm="example"')
+            return res.status(401).send()
+          }
+          return next()
+    },
+    isLoggedIn: (req, res, next)=>{
+        if(req.isAuthenticated()){
+            return next()
         }else{
-            next()
+            req.flash("error", "Kindly login to access this page")
+            return res.redirect("/auth/login")
         }
     }
 }

@@ -10,32 +10,39 @@ let mailService = new SendMail("Gmail");
 const PaymentValidationResponseClass = require('../../helpers/PaymentValidationResponse')
 const PaymentUpdateResponseClass = require('../../helpers/PaymentUpdateResponse')
 const PaymentQueryResponse = require('../../helpers/PaymentQueryResponse')
-const { bin2hashData, successCode, failureCode, nairaIsoCode, transSuccess ,transPending,transFailure, getTime, getDay, dateTime, getTransMessage } = require('../../helpers/index')
+const { bin2hashData, successCode, failureCode, nairaIsoCode, transSuccess, transPending, transFailure, getTime, getDay, convertDate,dateTime, getTransMessage } = require('../../helpers/index')
 
 module.exports = {
     validatePayment: ('/', async (req, res) => {
         let response
         let { referenceID, otherDetails, hash } = req.body
-        let { amount } = otherDetails
-        console.log(bin2hashData(referenceID + amount, process.env.HASH_KEY), 1)
+        let { isManualRenew } = otherDetails
+        console.log(bin2hashData(referenceID + isManualRenew + process.env.HASH_KEY, process.env.HASH_KEY), 1)
         if (referenceID.trim() == "") {
-            response = new PaymentValidationResponseClass(referenceID, "", otherDetails, 0.00, failureCode, "Invalid User Id", hash)
+            let responseHash = bin2hashData(referenceID + "" + isManualRenew + failureCode + "Invalid User Id"+ process.env.HASH_KEY)
+            response = new PaymentValidationResponseClass(referenceID, "", otherDetails, failureCode, "Invalid User Id", responseHash)
             return res.status(200).json(response)
-        } else if (amount < 0) {
-            response = new PaymentValidationResponseClass(referenceID, "", otherDetails, 0.00, failureCode, "Invalid Amount", hash)
-            return res.status(200).json(response)
-        } else if (hash !== bin2hashData(referenceID + amount, process.env.HASH_KEY)) {
-            response = new PaymentValidationResponseClass(referenceID, "", otherDetails, 0.00, failureCode, "Invalid Hash", hash)
+        }
+        //  else if (amount < 0) {
+        //     response = new PaymentValidationResponseClass(referenceID, "", otherDetails, 0.00, failureCode, "Invalid Amount", hash)
+        //     return res.status(200).json(response)
+        // } 
+        else if (hash !== bin2hashData(referenceID + isManualRenew + process.env.HASH_KEY, process.env.HASH_KEY)) {
+            let responseHash = bin2hashData(referenceID + "" + isManualRenew + failureCode + "Invalid Hash"+ process.env.HASH_KEY)
+            response = new PaymentValidationResponseClass(referenceID, "", otherDetails, failureCode, "Invalid Hash", responseHash)
             return res.status(200).json(response)
         } else {
             let callResponse = await CallService.makeCall("GET", `${process.env.ALEPO_GET_USER}/${referenceID}`)
             let { status } = callResponse
             if (status == true) {
                 let { firstName, lastName, email, phoneHome } = callResponse.response
-                response = new PaymentValidationResponseClass(referenceID, `${firstName} ${lastName}`, { ...otherDetails, currency: nairaIsoCode, charges: parseFloat(process.env.TRANSACTION_CHARGES) }, parseFloat(amount + Number(process.env.TRANSACTION_CHARGES)), successCode, "Successful", hash)
+                let responseHash = bin2hashData(referenceID + `${firstName} ${lastName}` + isManualRenew + successCode + "Successful"+ process.env.HASH_KEY)
+
+                response = new PaymentValidationResponseClass(referenceID, `${firstName} ${lastName}`, { ...otherDetails },  successCode, "Successful", responseHash)
                 return res.status(200).json(response)
             } else {
-                response = new PaymentValidationResponseClass(referenceID, "", otherDetails, 0.00, failureCode, "Invalid User", hash)
+                let responseHash = bin2hashData(referenceID + "" + isManualRenew + successCode + "Successful"+ process.env.HASH_KEY)
+                response = new PaymentValidationResponseClass(referenceID, "", otherDetails, failureCode, callResponse.response.toString(), responseHash)
                 return res.status(200).json(response)
             }
         }
@@ -43,87 +50,130 @@ module.exports = {
 
     updatePayment: ('/', async (req, res) => {
         let response
-        let { referenceID, transReference, totalAmount, Currency, otherDetails, hash } = req.body
-        let { amount, charges, currency } = otherDetails
-        console.log(bin2hashData(referenceID + amount + charges + currency, process.env.HASH_KEY), 2)
+        let { referenceID, transReference, totalAmount, Currency, otherDetails, hash, bankName, channel } = req.body
+        totalAmount = parseInt(totalAmount)
+        let { isManualRenew } = otherDetails
+        console.log(bin2hashData(referenceID + isManualRenew + transReference + parseInt(totalAmount).toFixed(2) + process.env.HASH_KEY, process.env.HASH_KEY), 2)
         if (referenceID.trim() == "") {
-            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid User Id", hash)
+            let responseHash = bin2hashData(referenceID +  transReference + "" +  failureCode + "Invalid User Id"+ process.env.HASH_KEY)
+
+            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid User Id", responseHash)
             return res.status(200).json(response)
-        } else if (totalAmount < 0 || amount < 0) {
-            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid Amount", hash)
+        } else if (parseInt(totalAmount) < 1 ) {
+            let responseHash = bin2hashData(referenceID +  transReference + "" +  failureCode + "Invalid Amount"+ process.env.HASH_KEY)
+            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid Amount", responseHash)
             return res.status(200).json(response)
-        } else if (hash !== bin2hashData(referenceID + amount + charges + currency, process.env.HASH_KEY)) {
-            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid Hash", hash)
+        } else if (hash !== bin2hashData(referenceID +  isManualRenew + transReference + totalAmount.toFixed(2) + process.env.HASH_KEY, process.env.HASH_KEY)) {
+            let responseHash = bin2hashData(referenceID + transReference + "" +  failureCode + "Invalid Hash"+ process.env.HASH_KEY)
+            response = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, "Invalid Hash", responseHash)
             return res.status(200).json(response)
         } else {
             let validateResponse = await CallService.makeCall("GET", `${process.env.ALEPO_GET_USER}/${referenceID}`)
-            let paymentReference = uuid()
-            let newTransaction = await models.Transactions.create({
-                subscriber_id: referenceID,
-                customer_firstname: validateResponse.response.firstName,
-                customer_lastname: validateResponse.response.lastName,
-                customer_phone: validateResponse.response.phoneHome,
-                customer_email: validateResponse.response.email,
-                transaction_ref: transReference,
-                payment_ref: paymentReference,
-                total_amount: totalAmount,
-                charge: charges,
-                amount: amount,
-                bank_name: "GtBank",
-                transaction_status: transSuccess,
-                payment_date: dateTime
+            if (validateResponse.status == true) {
+                let paymentReference = uuid()
+                try {
 
-            })
-            let callResponse = await CallService.makeCall("GET", `${process.env.ALEPO_POST_USER}/${referenceID}/postamount?amount=${amount}&paymentMethod=8&transactionType=Credit&cardId=xc03&paymentReceiver=chijioke`)
-            let { status, response } = callResponse
-            let returnedResponse 
-            if (status) {
-                newTransaction.update({
-                    post_amount_status: 'success',
-                    payment_number_alepo: response.paymentNumber
-                })
-                await mailService.dispatch(validateResponse.response.email, process.env.EMAIL, "VDT Payment Complete", `Your payment of ${amount} has been successful`, async (err)=>{
-                    returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, paymentReference, successCode, "Successful", hash)
+
+                    let newTransaction = await models.Transactions.create({
+                        subscriber_id: referenceID,
+                        customer_firstname: validateResponse.response.firstName,
+                        customer_lastname: validateResponse.response.lastName,
+                        customer_phone: validateResponse.response.phoneHome ? validateResponse.response.phoneHome : 'nill',
+                        customer_email: validateResponse.response.email ? validateResponse.response.email : 'nill',
+                        transaction_ref: transReference,
+                        payment_ref: paymentReference,
+                        total_amount: parseInt(totalAmount).toFixed(2),
+                        charge: 0,
+                        amount: totalAmount.toFixed(2),
+                        bank_name: bankName && bankName !== "" ? bankName : "GtBank",
+                        channel: channel,
+                        transaction_status: transSuccess,
+                        payment_date: convertDate(Date.now())
+
+                    })
+                    let callResponse = await CallService.makeCall("GET", `${process.env.ALEPO_POST_USER}/${referenceID}/postamount?amount=${totalAmount.toFixed(2)}&paymentMethod=8&transactionType=Credit&cardId=xc03&paymentReceiver=chijioke`)
+                    if (isManualRenew == true) {
+                        let manualRenew = await CallService.makeCall("GET", `${process.env.ALEPO_MANUAL_RENEW}/${referenceID}/manualRenew`, { operationComment: "manual renew" })
+                    }
+                    let { status, response } = callResponse
+                    let returnedResponse
+                    if (status) {
+                        newTransaction.update({
+                            post_amount_status: 'success',
+                            payment_number_alepo: response.paymentNumber
+                        })
+                        await mailService.dispatch(validateResponse.response.email, process.env.EMAIL, "VDT Payment Complete", `Your payment of ${totalAmount} has been successful`, async (err) => {
+                            let responseHash = bin2hashData(referenceID +  transReference + paymentReference +  successCode + "Successful"+ process.env.HASH_KEY)
+                            returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, paymentReference, successCode, "Successful", responseHash)
+                            return res.status(200).send(returnedResponse)
+                        })
+                    } else {
+                        newTransaction.update({
+                            post_amount_status: 'failed',
+                            failure_reason_alepo: response.toString()
+                        })
+                        
+                        logger.error(response.toString())
+                        let responseHash = bin2hashData(referenceID +  transReference + paymentReference +  failureCode + response.toString()+ process.env.HASH_KEY)
+                        returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, paymentReference, failureCode, response.toString(), responseHash)
+                        return res.status(200).send(returnedResponse)
+
+                    }
+                } catch (error) {
+                    logger.error(error.toString())
+                    let responseHash = bin2hashData(referenceID +  transReference + paymentReference? paymentReference : "" +  failureCode + error.toString()+ process.env.HASH_KEY)
+                    returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, paymentReference, failureCode, error.toString(), responseHash)
                     return res.status(200).send(returnedResponse)
-                })
-            } else {
-                newTransaction.update({
-                    post_amount_status: 'failed',
-                    failure_reason_alepo: response.toString()
-                })
-                logger.error(response.toString())
-                returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, paymentReference, failureCode,  response.toString(), hash)
-                return res.status(200).send(returnedResponse)
 
+                }
+            } else {
+                let responseHash = bin2hashData(referenceID +  transReference + "" +  failureCode + validateResponse.response.toString()+ process.env.HASH_KEY)
+                returnedResponse = new PaymentUpdateResponseClass(referenceID, transReference, "", failureCode, validateResponse.response.toString(), responseHash)
+                return res.status(200).send(returnedResponse)
             }
 
         }
     }),
 
-    queryPayment: ('/', async(req, res)=>{
+    queryPayment: ('/', async (req, res) => {
         let response
-        let {ReferenceId , CustomerId , FormId , FieldId  , Hash } = req.body
+        let { ReferenceId, TransactionReference,  Hash } = req.body
         let incomingDate = req.body.Date
-            console.log(bin2hashData(String(ReferenceId + CustomerId + FormId + FieldId + incomingDate), process.env.HASH_KEY))
-      
-        if(ReferenceId.trim() == ""){
-            response = new PaymentQueryResponse(failureCode, "", "", "", "", "", "",transPending, "Transacrion reference is required" )
+        let merchantName = "VDT COMMUNICATIONS LTD"
+        console.log(bin2hashData(ReferenceId + TransactionReference + incomingDate + process.env.HASH_KEY))
+        
+        if (TransactionReference.trim() == "") {
+            let responseHash = bin2hashData(failureCode + "" + "" + "" + "" + "" + merchantName + transPending + "Transacrion reference is required" + process.env.HASH_KEY )
+            response = new PaymentQueryResponse(failureCode, "", "", "", "", "", merchantName, transPending, "Transacrion reference is required", responseHash)
             return res.status(200).send(response)
-        }else if (Hash !== bin2hashData(String(ReferenceId + CustomerId + FormId + FieldId + incomingDate), process.env.HASH_KEY)) {
-            response = new PaymentQueryResponse(failureCode, "", "", "", "", "", "",transPending, "Invalid Hash" )
+        } else if (Hash !== bin2hashData(ReferenceId + TransactionReference + incomingDate + process.env.HASH_KEY)) {
+            let responseHash = bin2hashData(failureCode + "" + "" + "" + "" + "" + merchantName + transPending + "Invalid Hash" + process.env.HASH_KEY )
+            response = new PaymentQueryResponse(failureCode, "", "", "", "", "", merchantName, transPending, "Invalid Hash", responseHash)
             return res.status(200).json(response)
-        } else{
+        } else {
+            let whereObj = {
+                transaction_ref: TransactionReference   
+            }
+            if(incomingDate && incomingDate.trim() !== ""){
+                let lessDate = new Date(incomingDate)
+                lessDate.setDate(lessDate.getDate() + 1);
+                whereObj.payment_date = {
+                    [Op.gt]: getDay(incomingDate),
+                    [Op.lt]: getDay(lessDate)
+                  }
+            }
+            
             let transaction = await models.Transactions.findOne({
-                where: {
-                    transaction_ref: ReferenceId
-                }
+                where: whereObj
             })
-            if(transaction !== null && transaction !== undefined){
-                let {dataValues} = transaction
-                response = new PaymentQueryResponse(successCode,"Successful", getDay(dataValues.payment_date),getTime(dataValues.payment_date),dataValues.transaction_ref, dataValues.amount, `${dataValues.customer_firstname} ${dataValues.customer_lastname}`,dataValues.transaction_status, getTransMessage(dataValues.transaction_status), Hash )
+            if (transaction !== null && transaction !== undefined) {
+                let { dataValues } = transaction
+                let responseHash = bin2hashData(successCode + "Successful" + getDay(dataValues.payment_date) + getTime(dataValues.payment_date) + dataValues.transaction_ref + dataValues.amount + merchantName + dataValues.transaction_status + getTransMessage(dataValues.transaction_status) + process.env.HASH_KEY )
+                response = new PaymentQueryResponse(successCode, "Successful", getDay(dataValues.payment_date), getTime(dataValues.payment_date), dataValues.transaction_ref, dataValues.amount, merchantName, dataValues.transaction_status, getTransMessage(dataValues.transaction_status), responseHash)
                 return res.status(200).send(response)
-            }else{
-                response = new PaymentQueryResponse(failureCode, "", "", "", "", "", "",transPending, "Transacrion not found" )
+            } else {
+                let responseHash = bin2hashData(failureCode + "" + "" + "" + "" + "" + merchantName + transPending + "Transacrion not found" + process.env.HASH_KEY )
+                response = new PaymentQueryResponse(failureCode, "", "", "", "", "", merchantName, transPending, "Transacrion not found", responseHash)
                 return res.status(200).send(response)
             }
         }

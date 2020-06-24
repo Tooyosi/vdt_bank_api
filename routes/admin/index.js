@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const adminController = require("../../controllers/admin/index")
-// const middleware = require('../../middleware/index')
+const {isLoggedIn} = require('../../middleware/index')
 
-router.get('/home',  adminController.get)
-router.get('/download',  adminController.getCsv)
+router.get('/home', isLoggedIn, adminController.get)
+router.get('/download', isLoggedIn, adminController.getCsv)
 
 module.exports = router;

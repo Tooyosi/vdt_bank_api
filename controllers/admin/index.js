@@ -10,7 +10,7 @@ module.exports = {
             var perPage = 20;
 
             var pageQuery = parseInt(req.query.page);
-            let { subsId, ref, email, amount, status, date } = req.query
+            let { subsId, ref, email, amount, status, date, channel } = req.query
             var pageNumber = pageQuery ? pageQuery : 1;
             let whereObj = {}
             if (subsId) {
@@ -18,6 +18,10 @@ module.exports = {
             }
             if (ref) {
                 whereObj.transaction_ref = ref
+            }
+            
+            if (channel) {
+                whereObj.channel = channel
             }
             if (email) {
                 whereObj.customer_email = email
@@ -42,6 +46,7 @@ module.exports = {
 
             })
             return res.render("admin", {
+                page: "home",
                 data: transactions.rows,
                 current: pageNumber,
                 pages: Math.ceil(transactions.count / perPage),
@@ -50,6 +55,7 @@ module.exports = {
                 email: email ? email : false,
                 amount: amount ? amount : false,
                 status: status ? status : false,
+                channel: channel ? channel : false,
                 date: date ? date : false
             });
 
@@ -65,7 +71,7 @@ module.exports = {
             var perPage = 20;
 
             var pageQuery = parseInt(req.query.page);
-            let { subsId, ref, email, amount, status, date } = req.query
+            let { subsId, ref, email, amount, status, date, channel } = req.query
             var pageNumber = pageQuery ? pageQuery : 1;
             let whereObj = {}
             if (subsId) {
@@ -73,6 +79,9 @@ module.exports = {
             }
             if (ref) {
                 whereObj.transaction_ref = ref
+            }
+            if (channel) {
+                whereObj.channel = channel
             }
             if (email) {
                 whereObj.customer_email = email
@@ -104,7 +113,7 @@ module.exports = {
             let filename = `Transactions.csv`
             const csvWriter = createCsvWriter({
                 path: `${filename}`,
-                header: [{id: 'trans_id', title : 'Transaction id'},{id: "subscriber_id", title: 'Subscriber Id'}, { id: "customer_firstname", title: 'Customer Firstname'}, {id:"customer_lastname", title:'Customer Lastname'}, {id:"customer_phone", title: 'Customer Phone'}, {id:"customer_email", title: 'Customer Email'}, {id: "transaction_ref", title: 'Transaction Reference'}, {id: "amount", title: 'Amount'}, {id: "transaction_status", title: 'Transaction Status'}, {id: "payment_date", title: 'Paymwnt Date'}, {id: "failure_reason_paystack", title: 'Paystack Failure Reason'}, {id: "post_amount_status", title: 'Post amount status'}, {id: "payment_number_alepo", title: 'Alepo payment status'}, {id: "failure_reason_alepo", title: 'Alepo failure reason'}]
+                header: [{id: 'trans_id', title : 'Transaction id'},{id: "subscriber_id", title: 'Subscriber Id'}, { id: "customer_firstname", title: 'Customer Firstname'}, {id:"customer_lastname", title:'Customer Lastname'}, {id:"customer_phone", title: 'Customer Phone'}, {id:"customer_email", title: 'Customer Email'}, {id: "transaction_ref", title: 'Transaction Reference'}, {id: "amount", title: 'Amount'}, {id: "transaction_status", title: 'Transaction Status'}, {id: "payment_date", title: 'Paymwnt Date'}, {id: "failure_reason_paystack", title: 'Paystack Failure Reason'}, {id: "post_amount_status", title: 'Post amount status'}, {id: "payment_number_alepo", title: 'Alepo payment status'}, {id: "failure_reason_alepo", title: 'Alepo failure reason', id: "bank_name", title: "Bank"}]
             })
                 
             csvWriter

@@ -12,6 +12,39 @@
 </head>
 
 <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!-- <a class="navbar-brand" href="#">Navbar</a> -->
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse justify-content-end" id="navbarSupportedContent">
+          <ul class="navbar-nav">
+            <%  if(!currentUser){ %>
+
+            <li class="<%= typeof page!=='undefined' && page == 'login' ? 'nav-item active' : 'nav-item' %>">
+              <a class="nav-link" href="/auth/login">Login <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="<%= typeof page!=='undefined' && page == 'signup' ? 'nav-item active' : 'nav-item' %>"">
+              <a class="nav-link" href="/auth/signup">Signup</a>
+            </li>
+            <li class="<%= typeof page!=='undefined' && page == 'forgot' ? 'nav-item active' : 'nav-item' %>"">
+              <a class="nav-link" href="/auth/forgot">Forgot Password</a>
+            </li>
+            <% }else{ %>
+
+            <li class="nav-item">
+              <a class="nav-link" href="/auth/logout">Logout</a>
+            </li>
+            
+            <li class="<%= typeof page!=='undefined' && page == 'home' ? 'nav-item active' : 'nav-item' %>">
+                <a class="nav-link" href="/admin/home">Home</a>
+              </li>
+            <% } %>
+
+          </ul>
+        </div>
+      </nav>  
         <div class="container-fluid">
             <div id="flash-messages">
                 <%if( error && error.length > 0){%>

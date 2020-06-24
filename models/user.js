@@ -10,11 +10,21 @@ module.exports = function(sequelize, DataTypes) {
       comment: "null",
       autoIncrement: true
     },
-    'username': {
+    'email': {
       type: DataTypes.STRING(255),
       allowNull: false,
       comment: "null",
       unique: true
+    },
+    'firstname': {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      comment: "null"
+    },
+    'lastname': {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      comment: "null"
     },
     'password': {
       type: DataTypes.STRING(255),
@@ -23,6 +33,16 @@ module.exports = function(sequelize, DataTypes) {
     },
     'last_login': {
       type: DataTypes.DATE,
+      allowNull: true,
+      comment: "null"
+    },
+    'reset_password_token': {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "null"
+    },
+    'reset_password_expiry': {
+      type: DataTypes.STRING(255),
       allowNull: true,
       comment: "null"
     }

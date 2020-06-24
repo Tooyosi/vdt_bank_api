@@ -23,13 +23,8 @@ const {auth} = require('../../middleware/index')
 *     parameters:
 *       - name: Auth
 *         in: header
-*         description: authorization details
-*         type: object
-*         properties:
-*             username:
-*               type: string
-*             password:
-*               type: string
+*         description: Basic Auth
+*         type: string*
 *       - in: body
 *         name: body   
 *         required: true
@@ -45,8 +40,8 @@ const {auth} = require('../../middleware/index')
 *              otherDetails:
 *                type: object
 *                properties:
-*                  amount:
-*                     type: integer
+*                  isManualRenew:
+*                     type: boolean
 *              hash:
 *                type: string
 *     requestBody:
@@ -82,8 +77,8 @@ router.post('/initiate', auth, paymentController.validatePayment)
 *     parameters:
 *       - name: Auth
 *         in: header
-*         description: authorization details
-*         type: object
+*         description: Basic Auth
+*         type: string*
 *         properties:
 *             username:
 *               type: string
@@ -99,26 +94,23 @@ router.post('/initiate', auth, paymentController.validatePayment)
 *              -otherDetails
 *              -hash
 *              -transReference
-*              -Currency
 *              -totalAmount
 *            properties:
 *              referenceID:
 *                type: string
 *              transReference:
 *                type: string
+*              bankName:
+*                type: string
+*              channel:
+*                type: string
 *              totalAmount:
-*                type: integer
-*              Currency:
-*                type: integer
+*                type: string
 *              otherDetails:
 *                type: object
 *                properties:
-*                  amount:
-*                     type: integer
-*                  currency:
-*                     type: integer
-*                  charges:
-*                     type: integer
+*                  isManualRenew:
+*                     type: boolean
 *              hash:
 *                type: string
 *     requestBody:
@@ -155,8 +147,8 @@ router.post('/update',auth,  paymentController.updatePayment)
 *     parameters:
 *       - name: Auth
 *         in: header
-*         description: authorization details
-*         type: object
+*         description: Basic Auth
+*         type: string*
 *         properties:
 *             username:
 *               type: string
@@ -169,20 +161,14 @@ router.post('/update',auth,  paymentController.updatePayment)
 *            type: object
 *            required:
 *              -ReferenceId
-*              -CustomerId 
-*              -FormId 
-*              -FieldId 
+*              -TransactionReference 
 *              -Date 
 *              -Hash 
 *            properties:
 *              ReferenceId:
 *                type: string
-*              CustomerId:
-*                type: integer
-*              FormId:
-*                type: integer
-*              FieldId:
-*                type: integer
+*              TransactionReference:
+*                type: string
 *              Date:
 *                type: string
 *              Hash:

@@ -9,13 +9,14 @@ class AlepoCallService {
         }
     }
 
-    async makeCall(method, url) {
+    async makeCall(method, url, data) {
         let response, status = false;
         try {
             response = await axios({
                 method: method,
                 url: url,
-                auth: this.auth
+                auth: this.auth,
+                data: data? data : null
             }).then((res)=>{
                 status = true
                 return res.data

@@ -56,6 +56,11 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       comment: "null"
     },
+    'channel': {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: "null"
+    },
     'transaction_status': {
       type: DataTypes.STRING(255),
       allowNull: false,
