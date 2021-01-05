@@ -9,7 +9,7 @@
   "author": "Oluwatoyosi oyegoke",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "basic-auth": "^2.0.1",
     "bootstrap": "^4.4.1",
     "connect-flash": "^0.1.1",
